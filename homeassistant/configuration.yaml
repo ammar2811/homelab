@@ -1,0 +1,17 @@
+# Home Assistant configuration (VM 121). Deployed by scripts/deploy-homeassistant.sh.
+# Features live in packages/ (one file per feature). UI-made automations, scripts and
+# scenes still go to the *.yaml files below, which are owned by the UI, not by this repo.
+
+# Loads default set of integrations. Do not remove.
+default_config:
+
+homeassistant:
+  packages: !include_dir_named packages
+
+# Load frontend themes from the themes folder
+frontend:
+  themes: !include_dir_merge_named themes
+
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml

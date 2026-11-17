@@ -1,0 +1,29 @@
+# https://gethomepage.dev/configs/services/
+- Media:
+    - Jellyfin:
+        href: http://jellyfin.home.arpa
+        description: Movies and TV
+        icon: jellyfin.svg
+        siteMonitor: http://jellyfin:8096
+
+- Home:
+    - Home Assistant:
+        href: http://homeassistant.home.arpa
+        description: Smart home
+        icon: home-assistant.svg
+        siteMonitor: http://10.77.0.21
+
+- Infrastructure:
+    - Proxmox:
+        href: https://10.77.0.10:8006
+        description: Hypervisor (pve.home.arpa)
+        icon: proxmox.svg
+    - AdGuard Home:
+        href: http://10.77.0.20
+        description: DNS and ad blocking
+        icon: adguard-home.svg
+        siteMonitor: http://10.77.0.20
+    - Router:
+        href: http://10.77.0.1
+        description: TP-Link Archer BE550
+        icon: tp-link.svg

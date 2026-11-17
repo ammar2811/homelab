@@ -1,0 +1,16 @@
+# Reverse proxy for VM 130. Names resolve to 10.77.0.30 via AdGuard DNS rewrites.
+# Plain HTTP for now (no domain yet). When a domain exists, switch these to
+# <name>.home.<domain> with a DNS-challenge wildcard certificate.
+
+http://jellyfin.home.arpa {
+	reverse_proxy jellyfin:8096
+}
+
+http://homepage.home.arpa {
+	reverse_proxy homepage:3000
+}
+
+# Bare IP or unknown names: send people to the dashboard.
+http:// {
+	redir http://homepage.home.arpa{uri}
+}

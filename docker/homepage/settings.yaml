@@ -1,0 +1,15 @@
+# https://gethomepage.dev/configs/settings/
+title: Homelab
+theme: dark
+color: slate
+headerStyle: clean
+layout:
+  Media:
+    style: row
+    columns: 3
+  Home:
+    style: row
+    columns: 3
+  Infrastructure:
+    style: row
+    columns: 3

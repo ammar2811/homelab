@@ -1,0 +1,59 @@
+# Homelab services on VM 130 (docker, 10.77.0.30).
+# Deployed with scripts/deploy-docker.sh to /opt/homelab on the VM.
+# App state lives in /srv/appdata on the VM (not in git). Media in /srv/media.
+#
+# Image versions are pinned on purpose; bump them deliberately and note it in
+# docs/services/docker-vm.md.
+
+name: homelab
+
+networks:
+  proxy:
+    name: proxy
+
+services:
+  caddy:
+    image: caddy:2.11.9
+    container_name: caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - /srv/appdata/caddy/data:/data
+      - /srv/appdata/caddy/config:/config
+    networks: [proxy]
+
+  jellyfin:
+    image: jellyfin/jellyfin:12.4
+    container_name: jellyfin
+    hostname: jellyfin           # shown as the server name in Jellyfin apps
+    restart: unless-stopped
+    user: "1000:1000"            # VM user "media"
+    group_add:
+      - "991"                    # VM group "render": access to /dev/dri/renderD128 (Quick Sync)
+    devices:
+      - /dev/dri/renderD128:/dev/dri/renderD128
+    environment:
+      - JELLYFIN_PublishedServerUrl=http://jellyfin.home.arpa
+      - TZ=America/Toronto
+    ports:
+      - "7359:7359/udp"          # client auto-discovery on the LAN
+    volumes:
+      - /srv/appdata/jellyfin/config:/config
+      - /srv/appdata/jellyfin/cache:/cache
+      - /srv/media:/media:ro
+    networks: [proxy]
+
+  homepage:
+    image: ghcr.io/gethomepage/homepage:v2.8.0
+    container_name: homepage
+    restart: unless-stopped
+    environment:
+      - HOMEPAGE_ALLOWED_HOSTS=homepage.home.arpa,10.77.0.30
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Toronto
+    volumes:
+      - ./homepage:/app/config
+    networks: [proxy]

@@ -1,0 +1,7 @@
+# Never commit secrets or machine-local files
+*.key
+*.pem
+.env
+*.bak-*
+__pycache__/
+*.pyc

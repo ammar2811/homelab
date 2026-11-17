@@ -1,0 +1,146 @@
+# Homelab service-down alerts.
+# Each service gets a connectivity binary sensor checked every 60 s from Home Assistant.
+# A service that stays down for 2 minutes sends a phone notification; recovery replaces it.
+# Limitation: Home Assistant runs on the same Proxmox host, so a host outage cannot alert
+# from here (see docs/services/home-assistant.md).
+
+command_line:
+  - binary_sensor:
+      name: "Internet"
+      unique_id: homelab_internet
+      command: >-
+        curl -s -o /dev/null -m 5 -w "%{http_code}" https://www.google.com/generate_204
+        | grep -q "^204$" && echo ON || echo OFF
+      payload_on: "ON"
+      payload_off: "OFF"
+      device_class: connectivity
+      scan_interval: 60
+
+  - binary_sensor:
+      name: "Router"
+      unique_id: homelab_router
+      command: >-
+        curl -s -o /dev/null -m 5 -w "%{http_code}" http://10.77.0.1/
+        | grep -qE "^[23]" && echo ON || echo OFF
+      payload_on: "ON"
+      payload_off: "OFF"
+      device_class: connectivity
+      scan_interval: 60
+
+  - binary_sensor:
+      name: "Proxmox"
+      unique_id: homelab_proxmox
+      command: >-
+        curl -sk -o /dev/null -m 5 -w "%{http_code}" https://10.77.0.10:8006/
+        | grep -qE "^[23]" && echo ON || echo OFF
+      payload_on: "ON"
+      payload_off: "OFF"
+      device_class: connectivity
+      scan_interval: 60
+
+  - binary_sensor:
+      name: "AdGuard DNS"
+      unique_id: homelab_adguard_dns
+      # Real DNS query to AdGuard (not just its web UI).
+      command: >-
+        nslookup -timeout=3 example.com 10.77.0.20 >/dev/null 2>&1 && echo ON || echo OFF
+      payload_on: "ON"
+      payload_off: "OFF"
+      device_class: connectivity
+      scan_interval: 60
+
+  - binary_sensor:
+      name: "Tailscale"
+      unique_id: homelab_tailscale
+      command: >-
+        ping -c 1 -W 2 10.77.0.25 >/dev/null 2>&1 && echo ON || echo OFF
+      payload_on: "ON"
+      payload_off: "OFF"
+      device_class: connectivity
+      scan_interval: 60
+
+  - binary_sensor:
+      name: "Jellyfin"
+      unique_id: homelab_jellyfin
+      # Jellyfin's own health endpoint, through Caddy, so the proxy is tested too.
+      command: >-
+        curl -s -m 5 -H "Host: jellyfin.home.arpa" http://10.77.0.30/health
+        | grep -q "Healthy" && echo ON || echo OFF
+      payload_on: "ON"
+      payload_off: "OFF"
+      device_class: connectivity
+      scan_interval: 60
+
+  - binary_sensor:
+      name: "Homepage"
+      unique_id: homelab_homepage
+      command: >-
+        curl -s -o /dev/null -m 5 -w "%{http_code}" -H "Host: homepage.home.arpa" http://10.77.0.30/
+        | grep -q "^200$" && echo ON || echo OFF
+      payload_on: "ON"
+      payload_off: "OFF"
+      device_class: connectivity
+      scan_interval: 60
+
+group:
+  homelab_services:
+    name: "Homelab services"
+    entities:
+      - binary_sensor.internet
+      - binary_sensor.router
+      - binary_sensor.proxmox
+      - binary_sensor.adguard_dns
+      - binary_sensor.tailscale
+      - binary_sensor.jellyfin
+      - binary_sensor.homepage
+
+automation:
+  - id: homelab_service_down
+    alias: "Homelab: service down"
+    description: "Notify the phone when a homelab service has been down for 2 minutes."
+    mode: parallel
+    triggers:
+      - trigger: state
+        entity_id: &homelab_sensors
+          - binary_sensor.internet
+          - binary_sensor.router
+          - binary_sensor.proxmox
+          - binary_sensor.adguard_dns
+          - binary_sensor.tailscale
+          - binary_sensor.jellyfin
+          - binary_sensor.homepage
+        to: "off"
+        for: "00:02:00"
+    actions:
+      - action: notify.mobile_app_pixel_9
+        data:
+          title: "{{ trigger.to_state.name }} is down"
+          message: "No response since {{ trigger.to_state.last_changed | as_local | as_timestamp | timestamp_custom('%-I:%M %p') }}."
+          data:
+            tag: "homelab-{{ trigger.entity_id }}"
+            channel: "Homelab alerts"
+            importance: high
+            clickAction: "http://homepage.home.arpa"
+
+  - id: homelab_service_recovered
+    alias: "Homelab: service recovered"
+    description: "Replace the down alert when a service comes back after an outage of 2+ minutes."
+    mode: parallel
+    triggers:
+      - trigger: state
+        entity_id: *homelab_sensors
+        from: "off"
+        to: "on"
+    conditions:
+      - condition: template
+        value_template: >-
+          {{ (trigger.to_state.last_changed - trigger.from_state.last_changed).total_seconds() >= 120 }}
+    actions:
+      - action: notify.mobile_app_pixel_9
+        data:
+          title: "{{ trigger.to_state.name }} is back"
+          message: >-
+            Down for {{ ((trigger.to_state.last_changed - trigger.from_state.last_changed).total_seconds() / 60) | round(0) | int }} min.
+          data:
+            tag: "homelab-{{ trigger.entity_id }}"
+            channel: "Homelab alerts"

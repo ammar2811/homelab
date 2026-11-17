@@ -1,0 +1,44 @@
+# Garbage-day reminder, the evening before collection.
+# Source: the municipality's collection calendar (iCal feed for our address), added in
+# the UI as the "Remote calendar" integration named "Garbage collection" ->
+# calendar.garbage_collection. The feed URL identifies the address, so it lives only in
+# Home Assistant, never in this repo. Holiday shifts come from the calendar itself.
+
+automation:
+  - id: garbage_day_reminder
+    alias: "Garbage day: evening reminder"
+    description: "At 8 PM, announce tomorrow's collection on the Home Mini and notify the phone."
+    mode: single
+    triggers:
+      - trigger: time
+        at: "20:00:00"
+    actions:
+      - action: calendar.get_events
+        target:
+          entity_id: calendar.garbage_collection
+        data:
+          start_date_time: "{{ (today_at('00:00') + timedelta(days=1)).isoformat() }}"
+          end_date_time: "{{ (today_at('00:00') + timedelta(days=2)).isoformat() }}"
+        response_variable: agenda
+      - variables:
+          streams: >-
+            {{ agenda['calendar.garbage_collection'].events
+               | map(attribute='summary') | map('trim') | unique | list }}
+          spoken_list: >-
+            {% set l = streams | map('lower') | list %}
+            {% if l | count == 1 %}{{ l[0] }}{% else %}{{ l[:-1] | join(', ') }} and {{ l[-1] }}{% endif %}
+      - condition: template
+        value_template: "{{ streams | count > 0 }}"
+      - action: tts.speak
+        target:
+          entity_id: tts.google_translate_en_com
+        data:
+          media_player_entity_id: media_player.bedroom_speaker
+          message: "Reminder: tomorrow is collection day. Put out the {{ spoken_list }}."
+      - action: notify.mobile_app_pixel_9
+        data:
+          title: "Collection tomorrow"
+          message: "Put out the {{ spoken_list }} tonight."
+          data:
+            tag: "garbage-day"
+            channel: "Reminders"
