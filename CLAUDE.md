@@ -175,6 +175,21 @@ This repo is private and keeps every detail. A public showcase copy is generated
 remains, and commits into the separate public repo (default `../homelab-public`). It never pushes.
 `--preview [DIR]` builds from the working tree into a scratch folder with no git activity.
 
+| | |
+|---|---|
+| Public repo | https://github.com/ammar2811/homelab (public, MIT, default branch `main`) |
+| Local clone | `/home/ammar/Repos/homelab-public` (remote `origin`), built only by the script, never edited by hand |
+| Commit identity | Set in that clone's git config (GitHub no-reply address); never the private repo's address |
+| History | One commit per publish ("Publish from private repo <sha>"); private history is never published |
+| First published | 2026-11-17, from private commit `8ab1074` |
+
+Update flow (push only when Ammar asks):
+
+```bash
+scripts/build-public.py                       # after committing here; builds and commits the public copy
+git -C ../homelab-public push                 # publish
+```
+
 - **Never strip details from this repo to make it publishable**; add a rule to `publish/redactions.tsv`
   instead. `publish/` itself is never published.
 - When you write something personal into the docs (addresses, location, account names, tailnet name,
