@@ -35,8 +35,30 @@ Done: Docker VM 130 with Caddy (HTTP), Jellyfin (Quick Sync verified) and Homepa
 7. **Homepage widgets** - service widgets (Jellyfin, AdGuard) need API keys created by Ammar; keep them
    out of git.
 
+## Wired network (planned)
+
+Move the OptiPlex off the shelf under the router into the middle bedroom upstairs, and wire the
+house. Planned 2026-11-18; the live plan, generated shopping list, numbered run sheet and install
+steps are in a private planner page (a Claude artifact; its data is the `plans/main` document).
+
+
+- **Router** (BE550, 4 x 2.5G LAN) stays by the ONT; uses 3 ports: trunk upstairs, basement TV,
+  basement desk.
+- **Trunk**: 2 x Cat6 (one spare) up the stacked wall between the kitchen and the entry to a 10-port
+  unmanaged gigabit PoE+ switch in the middle bedroom.
+- **On the switch**: OptiPlex (onboard port, keeps Intel AMT), NAS, desk, back bedroom TV and console
+  (via the attic), front and back door PoE cameras (via the attic and soffits).
+- **Basement**: 2 x Cat6 from the router plate down into the under-stair storage, across the
+  furnace room's open joists, into the basement bedroom.
+- About 245 ft of in-wall cable (one 500 ft box), 14 keystone jacks, 4 wall plates (6, 4, 2, 2 port).
+- Constraints: semi-detached, never drill the party wall; avoid exterior walls except the camera
+  drops; fire-seal every plate hole between floors.
+- Cutover: moving the OptiPlex takes DNS down for the house until it is back; afterwards update the
+  Physical section of [network.md](network.md) and re-test DNS from the laptop.
+
 ## Shopping list
 
+- Wiring: see "Wired network (planned)" above; the itemized list lives in the planner page
 - 32 GB DDR4-2666 (2 x 16 GB) - before Immich or any further VM (3.6 GiB left with HA running)
 - 12-20 TB 3.5" HDD for media (one bay in the SFF)
 - Backup target for photos and guest backups
