@@ -53,7 +53,8 @@ otherwise HA rejects proxied requests.
 | Google Translate TTS | `tts.google_translate_en_com` (set up by onboarding) |
 | Command line | The 7 homelab checks (see below) |
 | Remote Calendar | "Garbage collection" -> `calendar.garbage_collection`, the municipality's iCal feed for the address |
-| Zigbee/Thread | Not yet; no smart devices in the house yet. Needs a coordinator (SMLIGHT SLZB-06 preferred) |
+| ESPHome | Desk lamp (ESP32 relay, `desk-lamp`, `10.77.0.130`) added 2026-11-19 as "Bedroom Desk Lamp": `switch.bedroom_desk_lamp_lamp`, Wi-Fi signal and uptime sensors, restart button. Firmware lives in the separate `Smart-Desk-Lamp-IoT-System` repo; its API encryption key is in that repo's gitignored `secrets.yaml`. It must stay on the main network (decision 2026-11-16). Weak 2.4 GHz link, see roadmap |
+| Zigbee/Thread | Not yet; no Zigbee/Thread devices yet. Needs a coordinator (SMLIGHT SLZB-06 preferred) |
 | Voice ("Hey Google") | Not set up; needs Home Assistant Cloud (Nabu Casa) or a manual Google project, see roadmap |
 
 ## Config as code

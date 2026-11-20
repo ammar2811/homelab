@@ -51,6 +51,8 @@ Guest IDs follow the rule ID = 100 + last octet.
 | `10.77.0.2-.99` | | Reserved for infrastructure (NAS, Zigbee coordinator, APs) | Free |
 | `10.77.0.100-.249` | | DHCP clients | Pool |
 | `10.77.0.208` | | Intel AMT of the OptiPlex (DHCP lease) | Live, should be pinned |
+| `10.77.0.130` | `desk-lamp` | ESP32 desk lamp (ESPHome), 2.4 GHz Wi-Fi, DHCP lease | Live |
+| unknown | | Garage door opener, 2.4 GHz Wi-Fi, DHCP lease | Live, not yet identified |
 
 ## DNS flow
 
