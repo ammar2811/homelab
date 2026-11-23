@@ -66,6 +66,13 @@ Verified 2026-11-22 right after adding the rule: `tailscale status` showed the p
 `direct <carrier IP>:<port>` instead of `relay "tor"`, `tailscale ping` answered via the direct
 address, and 5 pings had 0% loss (28-160 ms; the spread is the phone's radio waking up).
 
+**The warning alone is not an outage.** tailscaled raises "DNS unavailable" (`dns-forward-failing`) when a
+single forwarded query times out, shows it after 15 s, and clears it on the next successful query
+(`net/dns/resolver/forwarder.go`). On 2026-11-22, after the forward, the phone showed the warning while
+pages loaded fine and every query in a capture was answered; a likely trigger is the carrier NAT handing
+the phone a new port after a few idle minutes (seen as `now using <carrier IP>:<new port>`), which
+Tailscale recovers from within a second. Only act if pages actually fail.
+
 **If DNS or pages fail on Tailscale again**, check in this order:
 
 ```bash
