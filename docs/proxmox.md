@@ -141,4 +141,5 @@ ssh pve 'pct create <ID> local:vztmpl/debian-13-standard_<ver>_amd64.tar.zst \
 ## Firewall
 
 The Proxmox firewall service runs but is disabled at datacenter level (default). The LAN is trusted and
-nothing is exposed to the internet. Revisit when Tailscale and exposed services arrive.
+nothing is exposed to the internet except Tailscale's WireGuard port (UDP 41641, forwarded to CT 125).
+Revisit if any service is ever exposed directly.

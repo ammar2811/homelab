@@ -3,6 +3,26 @@
 Newest first. Each entry: what we chose, why, and what we rejected. Add an entry whenever a choice is
 made between real alternatives.
 
+## 2026-11-22 - One port forward: UDP 41641 to Tailscale (CT 125)
+
+**Chosen**: forward UDP 41641 on the BE550 to `10.77.0.25:41641` (tailscaled's fixed port) so tailnet
+devices connect to home directly instead of through Tailscale's DERP relays. This replaces the "no port
+forward for now" part of the 2026-11-17 Tailscale decision.
+**Why**: on Rogers 5G+ the phone sits behind carrier NAT that maps every destination to a new port, so
+it never got a direct path and always used a relay. Its relay session (Toronto) went stale every so
+often while the phone kept sending through home's relay (Chicago): its DNS queries reached AdGuard and
+were answered, but the answers were dropped at Toronto ("derp-21 does not know about peer"). The phone
+showed "DNS unavailable" and pages failed to load until it reconnected. Measured over 4 days with a
+recorder on CT 125: 20,876 queries, none unanswered at home, 87 relay-lost minutes with a 16.7% query
+retry rate vs 2.5% otherwise. With the forward, the phone went direct right away, which also removes
+the relay throughput limit for remote Jellyfin.
+**Risk accepted**: the only thing reachable from the internet is tailscaled's WireGuard socket, which
+drops every packet not from a key in the tailnet. No web UI or other service is exposed. UPnP stays off.
+**Rejected**: IPv6 on the LAN (a direct IPv6 path still depends on hole punching through the router's
+and the carrier's firewalls, and IPv6 needs its own DNS work so devices keep using AdGuard; worth doing
+later as its own project, see [roadmap.md](roadmap.md)); living with relays (the outages are the
+problem); a Tailscale peer relay (still needs a reachable port at home).
+
 ## 2026-11-17 - Home Assistant automations as code
 
 **Chosen**: the official Terminal & SSH app with key auth; automations as YAML packages in

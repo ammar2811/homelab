@@ -26,7 +26,7 @@ Settings we set or verified (2026-11-16/17):
 | WPS | Off | Advanced > Wireless > WPS |
 | Remote Management | Off | Advanced > System > Administration |
 | Wi-Fi security | WPA3+WPA2 on 2.4/5 GHz, WPA3 on 6 GHz, MLO on | Advanced > Wireless > Wireless Settings |
-| Port forwards | None | Advanced > NAT Forwarding |
+| Port forwards | One: `tailscale`, UDP 41641 -> `10.77.0.25:41641` (decision 2026-11-22). No others | Advanced > NAT Forwarding > Port Forwarding |
 
 **Why Secondary DNS is not empty**: when it is blank, the BE550 adds itself as a second DNS server in
 DHCP, and clients send some queries to it, bypassing AdGuard (verified: `doubleclick.net` resolved to

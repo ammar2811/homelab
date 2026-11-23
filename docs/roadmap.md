@@ -9,7 +9,7 @@
 | Test clip in the library | `Test Pattern (2026)` (synthetic HEVC 10-bit) sits in Movies for transcoding tests | Delete it from `/srv/media/movies` once real media exists, or keep for future GPU checks |
 | Intel AMT on a DHCP address | Currently `10.77.0.208` | Pin it (router reservation or static in MEBx), verify remote KVM, check BIOS Deep Sleep Control = Disabled |
 | Alerts blind to host outages | Home Assistant (the alerter) runs on the Proxmox host, so a host or power outage sends nothing | External dead-man's switch: HA pings a Healthchecks.io check every few minutes; it emails when pings stop |
-| Tailscale via relay | The phone reached home through a Tailscale relay (Toronto), not directly; fine for web UIs, may limit remote Jellyfin streaming | Decide whether to allow one port forward (UDP 41641 -> `10.77.0.25`) for direct connections; record the decision. Re-check with `ssh tailscale 'tailscale status'` while a remote device is active |
+| Tailscale fix needs a field test | The UDP 41641 forward (2026-11-22) gave the phone a direct path on 5G at once, but the old failure took 10 min to hours to appear | After a few outings on mobile data, confirm no more "DNS unavailable" and `ssh tailscale 'tailscale status'` shows the phone `direct` while away; then close this row |
 | Weak Wi-Fi to the desk lamp | In HA the signal swung between -71 and -84 dBm over its first 10 minutes on 2026-11-19. It dropped off Wi-Fi at 22:52 and rejoined by itself at 22:54 without rebooting (HA showed it unavailable for 30 s). Right after it came back, the laptop saw 52% ping loss with replies taking up to 3 s. Recovery works, but the lamp will respond late or miss commands | Point the board's antenna away from the relay/metal and toward the router; move 2.4 GHz off channel 9 (overlaps neighbours on 6 and 11) to 1, 6 or 11; if it is still weak, a PoE access point upstairs on the planned switch (see Wired network). Track `sensor.bedroom_desk_lamp_wi_fi_signal` |
 | Router reverse DNS | Unknown whether the BE550 answers PTR for DHCP clients (affects names in AdGuard logs) | Check the Query Log client column |
 
@@ -78,3 +78,7 @@ steps are in a private planner page (a Claude artifact; its data is the `plans/m
 - Domain name for Caddy/HTTPS (determines hostnames and certificates)
 - Whether to reinstall Proxmox on ZFS before adding more guests
 - Redundant DNS hardware
+- IPv6 on the LAN (future-proofing, another direct path for Tailscale). Step 1: log in to the BE550 and
+  check whether its IPv6 settings can announce AdGuard as the IPv6 DNS server, or announce none; if they
+  can only announce the router, devices would bypass AdGuard. Then a fixed private IPv6 (ULA) on CT 120
+  and `bind_hosts: ["::"]` in AdGuard. See [network.md](network.md) (IPv6)

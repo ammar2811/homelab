@@ -15,8 +15,9 @@ self-hosted services for the house.
   `*.home.arpa` names, served to the LAN and to remote devices.
 - **Hardware transcoding**: the Intel iGPU passed through to a Docker VM; Jellyfin transcodes 10-bit
   HEVC on Quick Sync at about 10x real time, verified with `intel_gpu_top`.
-- **Zero exposed ports**: remote access, an exit node and ad blocking on the go through a Tailscale
-  subnet router.
+- **No exposed services**: remote access, an exit node and ad blocking on the go through a Tailscale
+  subnet router. The only open port is Tailscale's own WireGuard port, for direct (non-relayed)
+  connections from mobile networks.
 - **Home Assistant as code**: automations kept as YAML packages in git, deployed by script with a
   config check before every restart. Homelab service-down alerts to the phone, presence, and a
   garbage-day announcement driven by the municipal collection calendar.

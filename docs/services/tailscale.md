@@ -48,6 +48,38 @@ Remote access to the home network from anywhere, without opening ports.
 - Phone (Pixel 9) on mobile data: Homepage, Jellyfin and Proxmox loaded by name; exit node showed the
   home IP; AdGuard logged 293 lookups from `10.77.0.25` (71 blocked).
 
+## Direct connections (port forward, 2026-11-22)
+
+The BE550 forwards UDP 41641 to `10.77.0.25:41641`, the port tailscaled listens on
+(`PORT="41641"` in `/etc/default/tailscaled`; keep it fixed). The node then advertises
+`<public IP>:41641` as an endpoint, and devices behind hard carrier NAT can reach it directly.
+Decision and evidence: [decisions.md](../decisions.md) (2026-11-22).
+
+**The problem it fixed**: on Rogers 5G+ the phone (IPv6-only with 464XLAT, endpoint-dependent carrier
+NAT) never got a direct path and always used a DERP relay. Phone-to-home traffic went through home's
+relay (`ord`) and arrived, but home's replies went through the phone's relay (`tor`), and that session
+went stale every so often. tailscaled logged `derp-21 does not know about peer [...]`, DNS answers were
+dropped, and the phone showed "DNS unavailable" (the Tailscale warning can stay up for a while after DNS
+works again). Every query that reached AdGuard was answered, so AdGuard was never the problem.
+
+Verified 2026-11-22 right after adding the rule: `tailscale status` showed the phone on 5G as
+`direct <carrier IP>:<port>` instead of `relay "tor"`, `tailscale ping` answered via the direct
+address, and 5 pings had 0% loss (28-160 ms; the spread is the phone's radio waking up).
+
+**If DNS or pages fail on Tailscale again**, check in this order:
+
+```bash
+ssh tailscale 'tailscale status'                       # phone direct or relay?
+ssh tailscale 'tailscale status --json | python3 -c "import json,sys;print(json.load(sys.stdin)[\"Self\"][\"Addrs\"])"'
+                                                        # must include <public IP>:41641
+ssh tailscale 'journalctl -u tailscaled --since -1h | grep "does not know about peer"'
+```
+
+No `:41641` endpoint means the forward is gone (router reset or firmware update) or the port changed.
+To see whether queries arrive and get answered, run `tcpdump -i tailscale0 -nn host <device tailnet IP>`
+on CT 125 (tcpdump is installed there); a query without a reply is a home problem, a reply followed by
+the same query again means replies are not reaching the device.
+
 ## Operating it
 
 ```bash
@@ -61,10 +93,6 @@ Admin console tasks (Ammar): add/remove devices, approve routes, key expiry, DNS
 
 ## Known limitations
 
-- **Phone connected via relay** in the first test (`relay "tor"`): the home NAT is easy
-  (`MappingVariesByDestIP: false`), so the mobile carrier side is the likely cause. Relays work but limit
-  throughput (remote Jellyfin streaming may suffer). Fix option: forward UDP 41641 on the BE550 to
-  `10.77.0.25`; this is a port forward and needs an explicit decision (see [roadmap.md](../roadmap.md)).
 - If CT 125 or the host is down, remote access is down. Devices with "Override DNS servers" lose DNS
   while connected to Tailscale if AdGuard is unreachable; turning Tailscale off restores local DNS.
 - The tailnet's DNS points at a home IP: when a device is on Tailscale and at home, it still works (the

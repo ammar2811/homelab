@@ -21,9 +21,9 @@ Read this file fully before acting. Then read the doc for whatever you are about
    the internet. State exactly what will change first.
 4. **Keep the Proxmox host minimal.** Do not install extra software on `pve` beyond what Proxmox
    needs and small admin tools. Services live in containers or VMs, never on the host.
-5. **Nothing is exposed to the internet.** No port forwards, UPnP stays off. Remote access will be
-   Tailscale only. Do not change this without an explicit decision recorded in
-   [docs/decisions.md](docs/decisions.md).
+5. **Nothing is exposed to the internet.** UPnP stays off. The only port forward is UDP 41641 to
+   Tailscale on CT 125 (decision 2026-11-22). Remote access is Tailscale only. Do not change this
+   without an explicit decision recorded in [docs/decisions.md](docs/decisions.md).
 6. **Every change is documented here in the same session**: update the relevant doc, the IP plan,
    and add a decision entry when a choice was made between real alternatives.
 7. **Prove it works end to end.** After any change, test it the way a user experiences it (e.g. DNS
@@ -163,6 +163,9 @@ never pipe or type it yourself.
   keystrokes (`key` with literal characters).
 - **RAM is the tight resource**: about 3.6 GiB free with VMs 121 and 130 running. Check
   `free -m` on the host before adding guests.
+- **"DNS unavailable" in Tailscale on mobile data** was not AdGuard: replies were dropped at a stale
+  DERP relay. Fixed by the UDP 41641 forward; if it returns, check the phone is `direct` and the node
+  advertises `:41641` (see [docs/services/tailscale.md](docs/services/tailscale.md)).
 - **Remote devices appear in AdGuard as `10.77.0.25`** (the subnet router SNATs), not as themselves.
 - **Debian cloud images use a cloud kernel without GPU drivers**; VMs that need the iGPU must switch to
   `linux-image-amd64` (see [docs/services/docker-vm.md](docs/services/docker-vm.md)).
