@@ -7,9 +7,9 @@ Network-wide DNS with ad and tracker blocking for the whole house.
 | Container | LXC 120 `adguard`, unprivileged Debian 13, 1 core, 512 MB RAM + 512 MB swap, 4 GB disk |
 | IP | `10.77.0.20/24` (static), gateway and OS resolver `10.77.0.1` |
 | Boot | `onboot=1`, `startup order=1` (first guest to start), tag `dns` |
-| Version | AdGuard Home v0.107.80 (released 2026-11-03) |
+| Version | AdGuard Home v1.0.0 (released 2026-11-19); installed as v0.107.80, updated 2026-11-22 with the UI's built-in updater (config schema 34 to 35) |
 | Install path | `/opt/AdGuardHome` (mode 0700), systemd unit `AdGuardHome` |
-| Web UI | `http://10.77.0.20` (port 80). Ammar's login only. |
+| Web UI | `http://adguard.home.arpa` or `http://10.77.0.20` (port 80). Ammar's login only. In the built-in browser pane use the hostname: by IP it blocks the login script and the page stays blank. |
 | DNS | UDP/TCP 53 on all interfaces |
 | SSH | `ssh adguard` |
 
@@ -103,11 +103,34 @@ Editing `AdGuardHome.yaml` by hand: AdGuard rewrites the file when settings chan
 always `systemctl stop AdGuardHome` first, back the file up, edit, validate with `--check-config`,
 then start it.
 
+### Changing the web UI password
+
+AdGuard Home has no password change in its UI: the login is a bcrypt hash under `users:` in
+`AdGuardHome.yaml`. The login page's "Forgot password?" (v1.0.0) describes the same manual edit and
+suggests an online bcrypt generator; don't use one (it sends the password to a third party). [scripts/adguard/set-password.py](../../scripts/adguard/set-password.py) changes
+it. Ammar runs it (it prompts for the password with no echo; the password and hash are never printed):
+
+```bash
+scp scripts/adguard/set-password.py adguard:/root/
+ssh -t adguard 'apt-get -y install python3-bcrypt python3-yaml && python3 /root/set-password.py'
+```
+
+It prompts before stopping the service (DNS is down only for the few seconds of the write), backs up
+the YAML as `AdGuardHome.yaml.bak-<timestamp>`, validates with `--check-config` (restoring the backup
+on failure), clears `data/sessions.db` so every browser must log in again, and starts the service.
+Nothing else uses the AdGuard login (Homepage only pings the page). Old `.bak-*` files and
+`agh-backup/AdGuardHome.yaml` contain earlier hashes; they are root-only (0600 in a 0700 directory).
+Tested on v1.0.0 (2026-11-24): the YAML round-trip is structurally identical and passes `--check-config`.
+
 ### Updating AdGuard Home
 
 The UI shows when a new version exists. Prefer the same verified method as the install: download the
 new release and `checksums.txt`, verify, stop the service, replace `/opt/AdGuardHome/AdGuardHome`,
 start, run the verification queries above, and update the version in this file.
+
+The UI's own updater was used once (v0.107.80 to v1.0.0, 2026-11-22). It downloads from
+`static.adtidy.org` and keeps the previous binary and config in `/opt/AdGuardHome/agh-backup/` (roll
+back by stopping the service and copying them back).
 
 ## Known limitations
 

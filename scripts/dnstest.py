@@ -42,6 +42,8 @@ def query(server, name):
     return RCODES.get(rcode, str(rcode)), ips, ms
 
 
+if len(sys.argv) < 3:
+    sys.exit(f"usage: {sys.argv[0]} SERVER NAME [NAME ...]  e.g. 10.77.0.20 example.com doubleclick.net")
 server = sys.argv[1]
 for name in sys.argv[2:]:
     try:
